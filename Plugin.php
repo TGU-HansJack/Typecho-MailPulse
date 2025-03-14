@@ -114,67 +114,73 @@ class MailPulse_Plugin implements Typecho_Plugin_Interface
 
     public static function personalConfig(Typecho_Widget_Helper_Form $form) {}
 
-    public static function triggerMail($post)
-    {
-        // 输出 $post 的类型和内容用于调试
-        self::log("接收到的 \$post 类型: " . gettype($post));
-        self::log("接收到的 \$post 内容: " . print_r($post, true)); // 打印整个 $post 数组
-        
-        // 确保 $post 是数组并从中提取信息
-        if (is_array($post)) {
-            $postData = (object) $post; // 转换为对象以方便访问属性
-        } else {
-            self::log("触发邮件失败: \$post 不是有效的数组");
-            return;
-        }
+ public static function triggerMail($post)
+{
+    // 输出 $post 的类型和内容用于调试
+    self::log("接收到的 \$post 类型: " . gettype($post));
+    self::log("接收到的 \$post 内容: " . print_r($post, true)); // 打印整个 $post 数组
 
-        // 构建文章链接
-        $permalinkSuffix = !empty($postData->slug) ? $postData->slug : '';
-        $siteUrl = Typecho_Widget::widget('Widget_Options')->siteUrl; // 获取站点 URL
-        $postUrl = rtrim($siteUrl, '/') . '/' . $permalinkSuffix;
-
-        // 检查文章的 permalink 是否可用
-        if (empty($postUrl)) {
-            self::log("错误: 文章链接为空");
-            return;
-        }
-
-        // 获取文章链接和摘录
-        $excerpt = self::makeExcerpt($postData->text ?? ''); // 使用 strip_tags 防止 XSS
-        if (empty($excerpt)) {
-            $excerpt = "没有可用的摘录"; // 如果摘录为空，给出默认内容
-        }
-
-        $subject = "新文章: " . htmlspecialchars($postData->title); // 处理标题
-        $author = !empty($postData->author) ? $postData->author->screenName : '未知作者'; // 获取作者
-
-        // 打印调试信息
-        $options = Typecho_Widget::widget('Widget_Options')->plugin('MailPulse');
-        $notifyEmailList = explode(',', $options->notify_email);
-        $notifyEmailList = array_map('trim', $notifyEmailList); // 去除多余的空格
-
-        self::log("准备发送邮件给: " . implode(', ', $notifyEmailList));
-        self::log("邮件主题: " . $subject);
-        self::log("文章链接: " . $postUrl);
-        self::log("文章摘录: " . $excerpt);
-        self::log("文章作者: " . $author);
-
-        foreach ($notifyEmailList as $notifyEmail) {
-            $mailBody = str_replace(
-                ['{{title}}', '{{url}}', '{{excerpt}}', '{{author}}'],
-                [
-                    htmlspecialchars($postData->title), // 转义标题
-                    $postUrl, // 保持原始链接，以确保完整性
-                    $excerpt, // 保持原始摘录内容
-                    htmlspecialchars($author), // 转义作者
-                ],
-                $options->mail_template
-            );
-
-            // 直接发送邮件
-            self::sendImmediately($notifyEmail, $subject, $mailBody);
-        }
+    // 确保 $post 是数组并从中提取信息
+    if (is_array($post)) {
+        $postData = (object) $post; // 转换为对象以方便访问属性
+    } else {
+        self::log("触发邮件失败: \$post 不是有效的数组");
+        return;
     }
+
+    // 获取文章标题
+    $title = htmlspecialchars($postData->title); // 转义标题
+    // 构建文章链接
+    $permalinkSuffix = !empty($postData->slug) ? $postData->slug : '';
+    $siteUrl = Typecho_Widget::widget('Widget_Options')->siteUrl; // 获取站点 URL
+    $postUrl = rtrim($siteUrl, '/') . '/' . $permalinkSuffix; // 构建文章链接
+
+    // 检查文章的 permalink 是否可用
+    if (empty($postUrl)) {
+        self::log("错误: 文章链接为空");
+        return;
+    }
+
+    // 获取摘录
+    $excerpt = self::makeExcerpt($postData->text ?? ''); // 使用 strip_tags 防止 XSS
+    if (empty($excerpt)) {
+        $excerpt = "没有可用的摘录"; // 如果摘录为空，给出默认内容
+    }
+
+    // 定义邮件主题
+    $subject = "新文章: " . $title; // 使用获取的标题
+
+    // 获取作者信息
+    $author = !empty($postData->author) ? $postData->author->screenName : '未知作者'; // 获取作者
+
+    // 打印调试信息
+    $options = Typecho_Widget::widget('Widget_Options')->plugin('MailPulse');
+    $notifyEmailList = explode(',', $options->notify_email);
+    $notifyEmailList = array_map('trim', $notifyEmailList); // 去除多余的空格
+
+    self::log("准备发送邮件给: " . implode(', ', $notifyEmailList));
+    self::log("邮件主题: " . $subject);
+    self::log("文章链接: " . $postUrl);
+    self::log("文章摘录: " . $excerpt);
+    self::log("文章作者: " . $author);
+
+    foreach ($notifyEmailList as $notifyEmail) {
+        $mailBody = str_replace(
+            ['{{title}}', '{{url}}', '{{excerpt}}', '{{author}}'],
+            [
+                $title, // 使用获取的标题
+                $postUrl, // 保持原始链接，以确保完整性
+                $excerpt, // 保持原始摘录内容
+                htmlspecialchars($author), // 转义作者
+            ],
+            $options->mail_template
+        );
+
+        // 直接发送邮件
+        self::sendImmediately($notifyEmail, $subject, $mailBody);
+    }
+}
+
 
     private static function makeExcerpt($content, $length = 100)
     {
