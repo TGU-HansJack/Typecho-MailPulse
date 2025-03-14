@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{title}} - 文章更新通知</title>
+    <style>
+        .container { max-width: 600px; margin: 20px auto; padding: 15px; border: 1px solid #eee; }
+        .title { color: #333; font-size: 24px; margin-bottom: 15px; }
+        .content { line-height: 1.6; color: #666; }
+        .footer { margin-top: 20px; color: #999; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">{{title}}</h1>
+        <div class="content">
+            {{excerpt}}
+            <p><a href="{{url}}">点击阅读完整内容</a></p>
+        </div>
+        <div class="footer">
+            <p>此邮件由系统自动发送，{{unsubscribe}}</p>
+        </div>
+    </div>
+</body>
+</html>

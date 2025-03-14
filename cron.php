@@ -14,9 +14,13 @@ $processed = [];
 
 foreach ($queue as $key => $job) {
     if ($job['send_time'] <= $now) {
-        // 调用发送方法
-        MailPulse_Plugin::sendImmediately($job['email'], $job['subject'], $job['content']);
-        $processed[] = $key; // 标记已处理任务
+        try {
+            // 调用发送方法
+            MailPulse_Plugin::sendImmediately($job['email'], $job['subject'], $job['content']);
+            $processed[] = $key; // 标记已处理任务
+        } catch (Exception $e) {
+            MailPulse_Plugin::log("处理任务失败: {$e->getMessage()}", 'ERROR');
+        }
     }
 }
 
