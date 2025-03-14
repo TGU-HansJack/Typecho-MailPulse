@@ -9,15 +9,15 @@
 - 推荐文章：可选择是否推送推荐文章内容，能填写推荐文章的cid。
 
 ## 结构：
-/usr/plugins/MailPulse/
-├── Plugin.php             # 主逻辑
-├── cron.php               # 定时任务脚本
-├── templates/
-│   └── default.html       # 邮件模板
-├── lib/
-│   └── PHPMailer/         # PHPMailer库
-├── queue.json             # 自动生成的队列文件
-└── mailpulse.log          # 自动生成的日志文件
+- /usr/plugins/MailPulse/
+- ├── Plugin.php             # 主逻辑
+- ├── cron.php               # 定时任务脚本
+- ├── templates/
+- │   └── default.html       # 邮件模板
+- ├── lib/
+- │   └── PHPMailer/         # PHPMailer库
+- ├── queue.json             # 自动生成的队列文件
+- └── mailpulse.log          # 自动生成的日志文件
 
 ## 运行：
 ```mermaid
