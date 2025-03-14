@@ -9,6 +9,56 @@
 
 MailPulse 是一款用于 Typecho 博客的邮件推送订阅插件，旨在通过电子邮件通知订阅用户有关新文章发布的信息。该插件允许用户配置 SMTP 服务器设置，以便顺利发送电子邮件，同时支持基本的邮件模板定制。
 
+模版推荐：
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>邮件通知</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .day {
+            background-color: #ffffff;
+            border: 1px solid #dddddd;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .day h2 {
+            color: #333333;
+        }
+        .day p {
+            color: #555555;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 邮件容器 -->
+    <div class="container">
+        <div class="day">
+            <h2>新文章发布: {{title}}</h2>
+            <p>博客: <a href="https://www.hansjack.com/" target="_blank" style="color:#0e70df; text-decoration: none;">时光流·言</a></p>
+            <p>文章摘录: <span>{{excerpt}}</span></p>
+            <p>作者: <span><a href="https://www.hansjack.com/" target="_blank" style="color:#0e70df; text-decoration: none;">HansJack</a></span></p>
+<p style="font-size: 12px; color: #999;">本邮件由系统自动发送，请勿直接回复。</p>
+        </div>
+    </div>
+</body>
+</html>
+
+
+```
+
 #### 插件功能
 
 1. **文章发布通知**：
