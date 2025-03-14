@@ -1,6 +1,8 @@
 # Typecho-MailPulse
 邮件推送订阅插件
 
+MailPulse文件夹
+
 感谢[deepseek](https://www.deepseek.com/)和项目[visamz/CommentToMail](https://github.com/visamz/CommentToMail)的PHPMailer
 
 ### MailPulse 插件使用教程与功能介绍
