@@ -2,7 +2,7 @@
 /**
  * MailPulse - 邮件推送订阅插件
  * @package MailPulse
- * @version 1.2.2
+ * @version 1.3.0
  * @author HansJack
  * @link https://www.hansjack.com
  */
@@ -22,7 +22,7 @@ class MailPulse_Plugin implements Typecho_Plugin_Interface
         $db = Typecho_Db::get();
         $prefix = $db->getPrefix();
 
-        // 邮件订阅者表
+        // 创建邮件订阅者表
         $db->query("
             CREATE TABLE IF NOT EXISTS {$prefix}mailpulse_subscribers (
                 id INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -35,7 +35,7 @@ class MailPulse_Plugin implements Typecho_Plugin_Interface
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8
         ");
 
-        // 添加一列用于存储设置的邮箱地址
+        // 包含设置的邮箱地址的表
         $db->query("
             CREATE TABLE IF NOT EXISTS {$prefix}mailpulse_settings (
                 id INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -93,19 +93,6 @@ class MailPulse_Plugin implements Typecho_Plugin_Interface
             _t('SMTP密码/授权码')
         ));
 
-        // 推送配置
-        $pushGroup = new Typecho_Widget_Helper_Layout('div', array('class' => 'typecho-page-title'));
-        $pushGroup->html('<h2>推送配置</h2>');
-        $form->addItem($pushGroup);
-
-        $form->addInput(new Typecho_Widget_Helper_Form_Element_Text(
-            'push_interval',
-            null,
-            '0',
-            _t('推送延迟（分钟）'),
-            _t('0为立即发送，>0需配置服务器定时任务')
-        ));
-
         // 邮件模板
         $form->addInput(new Typecho_Widget_Helper_Form_Element_Textarea(
             'mail_template',
@@ -132,7 +119,7 @@ class MailPulse_Plugin implements Typecho_Plugin_Interface
         // 输出 $post 的类型和内容用于调试
         self::log("接收到的 \$post 类型: " . gettype($post));
         self::log("接收到的 \$post 内容: " . print_r($post, true)); // 打印整个 $post 数组
-
+        
         // 确保 $post 是数组并从中提取信息
         if (is_array($post)) {
             $postData = (object) $post; // 转换为对象以方便访问属性
@@ -154,6 +141,10 @@ class MailPulse_Plugin implements Typecho_Plugin_Interface
 
         // 获取文章链接和摘录
         $excerpt = self::makeExcerpt($postData->text ?? ''); // 使用 strip_tags 防止 XSS
+        if (empty($excerpt)) {
+            $excerpt = "没有可用的摘录"; // 如果摘录为空，给出默认内容
+        }
+
         $subject = "新文章: " . htmlspecialchars($postData->title); // 处理标题
         $author = !empty($postData->author) ? $postData->author->screenName : '未知作者'; // 获取作者
 
@@ -180,16 +171,17 @@ class MailPulse_Plugin implements Typecho_Plugin_Interface
                 $options->mail_template
             );
 
-            // 发送邮件
-            if ($options->push_interval > 0) {
-                self::addToQueue($notifyEmail, $subject, $mailBody);
-            } else {
-                self::sendImmediately($notifyEmail, $subject, $mailBody);
-            }
+            // 直接发送邮件
+            self::sendImmediately($notifyEmail, $subject, $mailBody);
         }
     }
 
-    // 日志记录方法
+    private static function makeExcerpt($content, $length = 100)
+    {
+        $text = trim(strip_tags($content));
+        return mb_substr($text, 0, $length) . (mb_strlen($text) > $length ? '...' : '');
+    }
+
     private static function log($message, $level = 'INFO') {
         $logFile = __DIR__ . '/mailpulse.log'; // 日志文件路径
         $logEntry = sprintf(
@@ -226,7 +218,6 @@ class MailPulse_Plugin implements Typecho_Plugin_Interface
             $mail->Subject = $subject;
             $mail->Body = $body;
 
-            // 发送邮件
             if (!$mail->send()) {
                 self::log("邮件发送失败: " . $mail->ErrorInfo);
             } else {
@@ -235,19 +226,6 @@ class MailPulse_Plugin implements Typecho_Plugin_Interface
         } catch (Exception $e) {
             self::log("邮件发送异常: " . $e->getMessage());
         }
-    }
-
-    private static function addToQueue($email, $subject, $body)
-    {
-        // 这是一个示例，您可以根据需求实现队列逻辑
-        self::log("邮件已加入队列: {$subject} 到 {$email}");
-        // 实现队列逻辑
-    }
-
-    private static function makeExcerpt($content, $length = 100)
-    {
-        $text = trim(strip_tags($content));
-        return mb_substr($text, 0, $length) . (mb_strlen($text) > $length ? '...' : '');
     }
 }
 ?>
